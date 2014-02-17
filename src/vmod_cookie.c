@@ -39,6 +39,17 @@ mkkey(void) {
 	AZ(pthread_key_create(&key, free));
 }
 
+static int vmod_cookie_compare (void const *a, void const *b)
+{
+   /* definir des pointeurs type's et initialise's
+      avec les parametres */
+   char const *const *pa = a;
+   char const *const *pb = b;
+
+   /* evaluer et retourner l'etat de l'evaluation (tri croissant) */
+   return strcmp (*pa, *pb);
+}
+
 int
 init_function(struct vmod_priv *priv, const struct VCL_conf *conf) {
 	pthread_once(&key_is_initialized, mkkey);
@@ -283,6 +294,63 @@ vmod_get_string(struct sess *sp) {
 	return (p);
 }
 
+const char *
+vmod_sort_string(struct sess *sp) {
+	struct cookie *curr;
+	struct vsb *output;
+	unsigned v, u;
+	char *p;
+	struct vmod_cookie *vcp = cobj_get(sp);
+	CHECK_OBJ_NOTNULL(vcp, VMOD_COOKIE_MAGIC);
+	unsigned num_cookies = 0;
+	unsigned i = 0;
+	char **cookies_array;
+	
+	num_cookies = vmod_count(sp);
+	
+	// allocate memory for an array of cookie names
+	cookies_array = (char **)WS_Alloc(sp->wrk->ws, num_cookies);
+	if (cookies_array == NULL) {
+		VSL(SLT_Debug, 0, "cookie-vmod: Workspace overflowed before cookie sort, abort");
+		return (NULL);
+	}
+	
+	// fill our array with char names
+	VTAILQ_FOREACH(curr, &vcp->cookielist, list) {
+		cookies_array[i] = curr->name;
+		++ i;
+	}
+	
+	// sort our array
+	qsort(cookies_array, num_cookies, sizeof(char *), vmod_cookie_compare);
+	
+	u = WS_Reserve(sp->wrk->ws, 0);
+	p = sp->wrk->ws->f;
+
+	output = VSB_new_auto();
+	AN(output);
+
+	// print cookies in the adequate order by following our array
+	for (i = 0; i < num_cookies; ++ i) {
+		VSB_printf(output, "%s=%s; ", cookies_array[i], vmod_get(sp, cookies_array[i]));
+	}
+	
+	VSB_trim(output);
+	VSB_finish(output);
+	v = VSB_len(output);
+	strcpy(p, VSB_data(output));
+
+	VSB_delete(output);
+
+	v++;
+	if (v > u) {
+		WS_Release(sp->wrk->ws, 0);
+		VSL(SLT_Debug, 0, "cookie-vmod: Workspace overflowed, abort");
+		return (NULL);
+	}
+	WS_Release(sp->wrk->ws, v + num_cookies); // also release the memory of our array
+	return (p);
+}
 
 const char *
 vmod_format_rfc1123(struct sess *sp, double ts, double duration) {
