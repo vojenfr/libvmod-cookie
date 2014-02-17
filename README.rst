@@ -10,7 +10,7 @@ import cookie;
 DESCRIPTION
 ===========
 
-project fork -->> https://github.com/lkarsten/libvmod-cookie
+forked project [ https://github.com/lkarsten/libvmod-cookie ]
 
 FUNCTIONS
 =========
@@ -46,7 +46,6 @@ Make targets:
 
 * make - builds the vmod
 * make install - installs the vmod in `VMODDIR`
-* make check - runs the unit tests in ``src/tests/*.vtc``
 
 In your VCL you could then use this vmod along the following lines::
 
