@@ -2,6 +2,7 @@ Module cookie
 Init init_function
 Function VOID parse(STRING)
 Function VOID clean()
+Function INT count()
 Function VOID set(STRING, STRING)
 Function STRING get(STRING)
 Function VOID delete(STRING)

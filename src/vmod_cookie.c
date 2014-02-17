@@ -193,6 +193,19 @@ vmod_clean(struct sess *sp) {
 	}
 }
 
+int
+vmod_count(struct sess *sp) {
+	struct cookie *cookie;
+	struct vmod_cookie *vcp = cobj_get(sp);
+	unsigned num_cookies = 0;
+	CHECK_OBJ_NOTNULL(vcp, VMOD_COOKIE_MAGIC);
+
+	VTAILQ_FOREACH(cookie, &vcp->cookielist, list) {
+		++ num_cookies;
+	}
+	return (num_cookies);
+}
+
 void
 vmod_filter_except(struct sess *sp, const char *whitelist) {
 	char cookienames[MAX_COOKIEPART][MAXCOOKIES];
