@@ -41,12 +41,10 @@ mkkey(void) {
 
 static int vmod_cookie_compare (void const *a, void const *b)
 {
-   /* definir des pointeurs type's et initialise's
-      avec les parametres */
+
    char const *const *pa = a;
    char const *const *pb = b;
 
-   /* evaluer et retourner l'etat de l'evaluation (tri croissant) */
    return strcmp (*pa, *pb);
 }
 
@@ -311,7 +309,7 @@ vmod_sort_string(struct sess *sp) {
 	// allocate memory for an array of cookie names
 	cookies_array = (char **)WS_Alloc(sp->wrk->ws, num_cookies);
 	if (cookies_array == NULL) {
-		VSL(SLT_Debug, 0, "cookie-vmod: Workspace overflowed before cookie sort, abort");
+		VSL(SLT_Debug, 0, "cookie-vmod: Unable to allocate memory before cookie sort, abort");
 		return (NULL);
 	}
 	
